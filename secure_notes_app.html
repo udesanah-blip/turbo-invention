@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Notes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a1628;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .mountain {
+            position: absolute;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border-left: 300px solid transparent;
+            border-right: 300px solid transparent;
+            border-bottom: 400px solid #1a2332;
+            filter: blur(1px);
+        }
+
+        .mountain.m1 {
+            left: -150px;
+            border-bottom-color: #0f1923;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .mountain.m2 {
+            right: -100px;
+            border-bottom-color: #1a2840;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        .mountain.m3 {
+            left: 30%;
+            border-left-width: 250px;
+            border-right-width: 250px;
+            border-bottom: 350px solid #141e2e;
+            animation: float 22s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .firefly {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+            animation: fly 15s infinite;
+        }
+
+        @keyframes fly {
+            0% {
+                transform: translate(0, 0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(200px, -300px);
+                opacity: 0;
+            }
+        }
+
+        .aurora {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                rgba(102, 126, 234, 0.1) 0%,
+                rgba(118, 75, 162, 0.15) 25%,
+                rgba(240, 147, 251, 0.1) 50%,
+                rgba(102, 234, 200, 0.15) 75%,
+                rgba(102, 126, 234, 0.1) 100%);
+            animation: aurora 15s ease-in-out infinite;
+        }
+
+        @keyframes aurora {
+            0%, 100% {
+                transform: translateX(-50px) scale(1.1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translateX(50px) scale(1.2);
+                opacity: 0.5;
+            }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(15, 25, 40, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .lock-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .login-screen, .notes-screen {
+            display: none;
+        }
+
+        .login-screen.active, .notes-screen.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="password"], input[type="text"], textarea {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="password"]:focus, input[type="text"]:focus, textarea:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            margin-bottom: 0;
+        }
+
+        .error-msg {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .notes-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .note-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .note-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .note-content {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .note-date {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .add-note-form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .notes-screen h2 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .owner-name {
+            position: relative;
+        }
+
+        .owner-name input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .owner-name input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .owner-name input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .note-owner {
+            font-size: 11px;
+            color: #a0aec0;
+            font-style: italic;
+            margin-top: 5px;
+            padding: 5px 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .sound-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            z-index: 100;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+
+        .sound-toggle.playing {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 4px 25px rgba(102, 126, 234, 0.6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg">
+        <div class="aurora"></div>
+    </div>
+
+    <div class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔇</div>
+
+    <div class="container">
+        <div class="header">
+            <div class="lock-icon">🔒</div>
+            <h1>රන දෙරණ රහස් පණිවිඩ 😇</h1>
+        </div>
+
+        <div class="login-screen active">
+            <div class="input-group">
+                <input type="password" id="passwordInput" placeholder="Enter Password" />
+            </div>
+            <button class="btn btn-primary" onclick="unlock()">Unlock</button>
+            <div id="errorMsg" class="error-msg" style="display: none;"></div>
+        </div>
+
+        <div class="notes-screen">
+            <h2>✨ My Notes</h2>
+            
+            <div class="add-note-form">
+                <div class="input-group owner-name">
+                    <input type="text" id="ownerName" placeholder="නම (optional)" />
+                </div>
+                <div class="input-group">
+                    <input type="text" id="noteTitle" placeholder="Note Title" />
+                </div>
+                <div class="input-group">
+                    <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="addNote()">Add Note</button>
+            </div>
+
+            <div class="notes-list" id="notesList"></div>
+
+            <button class="btn btn-secondary" onclick="lockApp()">Lock Notes</button>
+        </div>
+    </div>
+
+    <script>
+        const CORRECT_PASSWORD = 'IM3478C';
+        let notes = [];
+        let isUnlocked = false;
+        let audioContext;
+        let masterGain;
+        let isPlaying = false;
+        let oscillators = [];
+        let noiseNode;
+        let noiseGain;
+
+        // Initialize Web Audio API
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.gain.value = 0.3;
+                masterGain.connect(audioContext.destination);
+            }
+        }
+
+        // Create ambient pad sound
+        function createAmbientPad() {
+            const frequencies = [65.41, 82.41, 98.00, 130.81]; // C2, E2, G2, C3
+            
+            frequencies.forEach((freq, index) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                
+                gain.gain.value = 0;
+                gain.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + 2 + index * 0.5);
+                
+                osc.connect(gain);
+                gain.connect(masterGain);
+                
+                osc.start();
+                oscillators.push({ osc, gain });
+            });
+        }
+
+        // Create nature sounds (wind/white noise)
+        function createNatureSounds() {
+            const bufferSize = 2 * audioContext.sampleRate;
+            const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            
+            noiseNode = audioContext.createBufferSource();
+            noiseNode.buffer = noiseBuffer;
+            noiseNode.loop = true;
+            
+            noiseGain = audioContext.createGain();
+            noiseGain.gain.value = 0;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 400;
+            
+            noiseNode.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(masterGain);
+            
+            noiseNode.start();
+            noiseGain.gain.linearRampToValueAtTime(0.03, audioContext.currentTime + 3);
+        }
+
+        // Toggle sound
+        function toggleSound() {
+            const toggle = document.getElementById('soundToggle');
+            
+            if (!isPlaying) {
+                initAudio();
+                createAmbientPad();
+                createNatureSounds();
+                toggle.textContent = '🔊';
+                toggle.classList.add('playing');
+                isPlaying = true;
+            } else {
+                // Fade out
+                if (masterGain) {
+                    masterGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+                }
+                
+                setTimeout(() => {
+                    oscillators.forEach(({ osc }) => osc.stop());
+                    if (noiseNode) noiseNode.stop();
+                    oscillators = [];
+                    audioContext = null;
+                    toggle.textContent = '🔇';
+                    toggle.classList.remove('playing');
+                    isPlaying = false;
+                }, 1000);
+            }
+        }
+
+        // Play subtle click sound
+        function playClickSound() {
+            if (!isPlaying || !audioContext) return;
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc.frequency.value = 800;
+            gain.gain.value = 0.1;
+            
+            osc.connect(gain);
+            gain.connect(masterGain);
+            
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            osc.stop(audioContext.currentTime + 0.1);
+        }
+
+        async function loadNotes() {
+            try {
+                const result = await window.storage.get('secure_notes');
+                if (result && result.value) {
+                    notes = JSON.parse(result.value);
+                    renderNotes();
+                }
+            } catch (error) {
+                console.log('No existing notes found');
+            }
+        }
+
+        async function saveNotes() {
+            try {
+                await window.storage.set('secure_notes', JSON.stringify(notes));
+            } catch (error) {
+                console.error('Error saving notes:', error);
+            }
+        }
+
+        function unlock() {
+            const password = document.getElementById('passwordInput').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (password === CORRECT_PASSWORD) {
+                playClickSound();
+                isUnlocked = true;
+                document.querySelector('.login-screen').classList.remove('active');
+                document.querySelector('.notes-screen').classList.add('active');
+                document.getElementById('passwordInput').value = '';
+                errorMsg.style.display = 'none';
+                loadNotes();
+            } else {
+                errorMsg.textContent = '❌ Incorrect password. Please try again.';
+                errorMsg.style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        function lockApp() {
+            isUnlocked = false;
+            document.querySelector('.notes-screen').classList.remove('active');
+            document.querySelector('.login-screen').classList.add('active');
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+        }
+
+        function addNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            const owner = document.getElementById('ownerName').value.trim();
+
+            if (!title || !content) {
+                alert('Please fill in both title and content');
+                return;
+            }
+
+            playClickSound();
+
+            const note = {
+                id: Date.now(),
+                title: title,
+                content: content,
+                owner: owner || '',
+                date: new Date().toLocaleString()
+            };
+
+            notes.unshift(note);
+            saveNotes();
+            renderNotes();
+
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('ownerName').value = '';
+        }
+
+        function deleteNote(id) {
+            if (confirm('Are you sure you want to delete this note?')) {
+                playClickSound();
+                notes = notes.filter(note => note.id !== id);
+                saveNotes();
+                renderNotes();
+            }
+        }
+
+        function renderNotes() {
+            const notesList = document.getElementById('notesList');
+
+            if (notes.length === 0) {
+                notesList.innerHTML = '<div class="empty-state">No notes yet. Create your first note above! 📝</div>';
+                return;
+            }
+
+            notesList.innerHTML = notes.map(note => `
+                <div class="note-item">
+                    <div class="note-title">${escapeHtml(note.title)}</div>
+                    <div class="note-content">${escapeHtml(note.content)}</div>
+                    <div class="note-date">📅 ${note.date}</div>
+                    ${note.owner ? `<div class="note-owner">👤 ${escapeHtml(note.owner)}</div>` : ''}
+                    <button class="btn btn-delete" onclick="deleteNote(${note.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                unlock();
+            }
+        });
+
+        document.getElementById('noteContent').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                addNote();
+            }
+        });
+
+        // Create animated nature background
+        function createNatureBackground() {
+            const bg = document.querySelector('.animated-bg');
+            
+            // Create stars
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 60 + '%';
+                star.style.width = Math.random() * 2 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                bg.appendChild(star);
+            }
+
+            // Create mountains
+            const m1 = document.createElement('div');
+            m1.className = 'mountain m1';
+            bg.appendChild(m1);
+
+            const m2 = document.createElement('div');
+            m2.className = 'mountain m2';
+            bg.appendChild(m2);
+
+            const m3 = document.createElement('div');
+            m3.className = 'mountain m3';
+            bg.appendChild(m3);
+
+            // Create fireflies
+            for (let i = 0; i < 15; i++) {
+                const firefly = document.createElement('div');
+                firefly.className = 'firefly';
+                firefly.style.left = Math.random() * 100 + '%';
+                firefly.style.bottom = Math.random() * 50 + '%';
+                firefly.style.animationDelay = Math.random() * 15 + 's';
+                firefly.style.animationDuration = (10 + Math.random() * 10) + 's';
+                bg.appendChild(firefly);
+            }
+        }
+
+        createNatureBackground();
+    </script>
+</body>
+</html>
